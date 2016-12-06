@@ -20,6 +20,7 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscArrayQueue;
 import org.jctools.queues.MpscChunkedArrayQueue;
+import org.jctools.queues.MpscUnboundedArrayQueue;
 import org.jctools.queues.SpscLinkedQueue;
 import org.jctools.queues.atomic.MpscAtomicArrayQueue;
 import org.jctools.queues.atomic.MpscLinkedAtomicQueue;
@@ -93,7 +94,6 @@ public final class PlatformDependent {
 
     private static final int MPSC_CHUNK_SIZE =  1024;
     private static final int MIN_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * 2;
-    private static final int DEFAULT_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * MPSC_CHUNK_SIZE;
     private static final int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
 
     private static final long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
@@ -824,18 +824,28 @@ public final class PlatformDependent {
                 final int capacity =
                         Math.max(Math.min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
                 return new MpscChunkedArrayQueue<T>(MPSC_CHUNK_SIZE, capacity);
-            } else {
-                return new MpscLinkedAtomicQueue<T>();
             }
+            // TODO(scott): we don't respect capacity because there is no bounded atomic queue implementation.
+            // MpscAtomicArrayQueue will allocate an array (AtomicReferenceArray) of capacity initially which may be
+            // prohibitive when the max capacity is larger than will typically be used.
+            return new MpscLinkedAtomicQueue<T>();
+        }
+
+        static <T> Queue<T> newMpscQueue() {
+            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE) :
+            // MpscAtomicArrayQueue will allocate an array (AtomicReferenceArray) of capacity initially which may be
+            // prohibitive when the max capacity is larger than will typically be used.
+                                                  new MpscLinkedAtomicQueue();
         }
     }
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
+     * @return A MPSC queue which may be unbounded.
      */
     public static <T> Queue<T> newMpscQueue() {
-        return newMpscQueue(DEFAULT_MAX_MPSC_CAPACITY);
+        return Mpsc.newMpscQueue();
     }
 
     /**
