@@ -268,7 +268,7 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
         try {
             synchronized (ReferenceCountedOpenSslContext.class) {
                 try {
-                    ctx = SSLContext.make(SSL.SSL_PROTOCOL_ALL, mode);
+                    ctx = SSLContext.make(SSL.SSL_PROTOCOL_TLS, mode);
                 } catch (Exception e) {
                     throw new SSLException("failed to create an SSL_CTX", e);
                 }
@@ -395,11 +395,21 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
 
     @Override
     public final SSLEngine newEngine(ByteBufAllocator alloc, String peerHost, int peerPort) {
-        return newEngine0(alloc, peerHost, peerPort);
+        return newEngine0(alloc, peerHost, peerPort, true);
     }
 
-    SSLEngine newEngine0(ByteBufAllocator alloc, String peerHost, int peerPort) {
-        return new ReferenceCountedOpenSslEngine(this, alloc, peerHost, peerPort, true);
+    @Override
+    final SslHandler newHandler(ByteBufAllocator alloc, boolean startTls) {
+        return new SslHandler(newEngine0(alloc, null, -1, false), startTls, false);
+    }
+
+    @Override
+    final SslHandler newHandler(ByteBufAllocator alloc, String peerHost, int peerPort, boolean startTls) {
+        return new SslHandler(newEngine0(alloc, peerHost, peerPort, false), startTls, false);
+    }
+
+    SSLEngine newEngine0(ByteBufAllocator alloc, String peerHost, int peerPort, boolean jdkCompatibilityMode) {
+        return new ReferenceCountedOpenSslEngine(this, alloc, peerHost, peerPort, jdkCompatibilityMode, true);
     }
 
     abstract OpenSslKeyMaterialManager keyMaterialManager();

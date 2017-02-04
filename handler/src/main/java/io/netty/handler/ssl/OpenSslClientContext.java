@@ -20,7 +20,6 @@ import io.netty.internal.tcnative.SSL;
 import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
@@ -171,8 +170,7 @@ public final class OpenSslClientContext extends OpenSslContext {
                                 File keyCertChainFile, File keyFile, String keyPassword,
                                 KeyManagerFactory keyManagerFactory, Iterable<String> ciphers,
                                 CipherSuiteFilter cipherFilter, ApplicationProtocolConfig apn,
-                                long sessionCacheSize, long sessionTimeout)
-            throws SSLException {
+                                long sessionCacheSize, long sessionTimeout) throws SSLException {
         this(toX509CertificatesInternal(trustCertCollectionFile), trustManagerFactory,
                 toX509CertificatesInternal(keyCertChainFile), toPrivateKeyInternal(keyFile, keyPassword),
                 keyPassword, keyManagerFactory, ciphers, cipherFilter, apn, null, sessionCacheSize, sessionTimeout);
@@ -180,10 +178,9 @@ public final class OpenSslClientContext extends OpenSslContext {
 
     OpenSslClientContext(X509Certificate[] trustCertCollection, TrustManagerFactory trustManagerFactory,
                          X509Certificate[] keyCertChain, PrivateKey key, String keyPassword,
-                                KeyManagerFactory keyManagerFactory, Iterable<String> ciphers,
-                                CipherSuiteFilter cipherFilter, ApplicationProtocolConfig apn, String[] protocols,
-                                long sessionCacheSize, long sessionTimeout)
-            throws SSLException {
+                         KeyManagerFactory keyManagerFactory, Iterable<String> ciphers,
+                         CipherSuiteFilter cipherFilter, ApplicationProtocolConfig apn, String[] protocols,
+                         long sessionCacheSize, long sessionTimeout) throws SSLException {
         super(ciphers, cipherFilter, apn, sessionCacheSize, sessionTimeout, SSL.SSL_MODE_CLIENT, keyCertChain,
                 ClientAuth.NONE, protocols, false);
         boolean success = false;
